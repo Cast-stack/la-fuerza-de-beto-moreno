@@ -1,20 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "../styles/beto-moreno.css";
-import { getShows, getSongs, getVideos, getMembers, getContact } from "../lib/api/content.functions";
+import { supabase } from "../lib/supabase";
 import type { Show, Song, Video, Member, Contact } from "../lib/supabase";
 
 export const Route = createFileRoute("/")({
-  loader: async () => {
-    const [shows, songs, videos, members, contact] = await Promise.all([
-      getShows(),
-      getSongs(),
-      getVideos(),
-      getMembers(),
-      getContact(),
-    ]);
-    return { shows, songs, videos, members, contact };
-  },
   head: () => ({
     meta: [
       { title: "La Fuerza de Beto Moreno" },
@@ -32,7 +22,19 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { shows, songs, videos, members, contact } = Route.useLoaderData() as { shows: Show[], songs: Song[], videos: Video[], members: Member[], contact: Contact | null };
+  const [shows, setShows] = useState<Show[]>([]);
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [contact, setContact] = useState<Contact | null>(null);
+
+  useEffect(() => {
+    supabase.from("shows").select("*").order("date", { ascending: true }).then(({ data }) => data && setShows(data));
+    supabase.from("songs").select("*").order("id", { ascending: true }).then(({ data }) => data && setSongs(data));
+    supabase.from("videos").select("*").order("id", { ascending: true }).then(({ data }) => data && setVideos(data));
+    supabase.from("members").select("*").order("sort_order", { ascending: true }).then(({ data }) => data && setMembers(data));
+    supabase.from("contact").select("*").limit(1).single().then(({ data }) => data && setContact(data));
+  }, []);
 
   useEffect(() => {
     const script = "// Mobile nav\nfunction toggleNav() {\n  document.getElementById('navLinks').classList.toggle('open');\n}\n\n// Scroll reveal\nconst reveals = document.querySelectorAll('.reveal');\nconst observer = new IntersectionObserver((entries) => {\n  entries.forEach(entry => {\n    if (entry.isIntersecting) {\n      entry.target.classList.add('visible');\n    }\n  });\n}, { threshold: 0.12 });\nreveals.forEach(el => observer.observe(el));\n\n// Nav active highlight on scroll\nconst sections = document.querySelectorAll('section[id]');\nwindow.addEventListener('scroll', () => {\n  let scrollY = window.scrollY;\n  sections.forEach(sec => {\n    const top = sec.offsetTop - 90;\n    const bottom = top + sec.offsetHeight;\n    const link = document.querySelector(`.nav-links a[href=\"#${sec.id}\"]`);\n    if (link) {\n      if (scrollY >= top && scrollY < bottom) {\n        link.style.color = 'var(--fire-bright)';\n      } else {\n        link.style.color = '';\n      }\n    }\n  });\n});\n\n// Song card click \u2192 open Apple Music\nconst songs = [\n  'https://music.apple.com/us/album/tu-despedida-single/1713038286',\n  'https://music.apple.com/us/album/noches-busc%C3%A1ndote-single/1696851700',\n  'https://music.apple.com/us/album/lo-dice-tu-mirada-single/1691646979',\n  'https://music.apple.com/us/album/yo-te-necesito-single/1686673071',\n  'https://music.apple.com/us/album/a-puro-dolor-single/1677706681'\n];\ndocument.querySelectorAll('.song-card').forEach((card, i) => {\n  card.addEventListener('click', () => {\n    window.open(songs[i], '_blank');\n  });\n});\n";
