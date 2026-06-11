@@ -85,7 +85,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
     "jpeg-js": "^0.4.4",
-    "nitro": "3.0.260429-beta",
+    "nitro": "^3.0.260603-beta",
     "pixelmatch": "^7.2.0",
     "pngjs": "^7.0.0",
     "prettier": "^3.7.3",
