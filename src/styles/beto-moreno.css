@@ -850,3 +850,17 @@ footer {
   .song-art { font-size: 2.2rem; }
 }
 
+
+
+/* Optional video hero background (site_images key: hero_video). Layers over the
+   .hero-bg image, which acts as the poster/fallback while the video loads. */
+.hero-video {
+  position: absolute;
+  inset: 90px 0 0 0;
+  width: 100%;
+  height: calc(100% - 90px);
+  object-fit: cover;
+  filter: brightness(0.45) saturate(0.8);
+  z-index: 1;
+  pointer-events: none;
+}

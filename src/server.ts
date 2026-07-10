@@ -14,6 +14,7 @@ const NONCE_SENTINEL = "__CSP_NONCE__";
 //   - style-src 'unsafe-inline': the page uses inline style={} attributes.
 //   - connect-src supabase: the browser talks to Supabase REST directly.
 //   - frame-src youtube: the <iframe> video embeds.
+//   - media-src https: the optional <video> hero background (Supabase Storage).
 //   - img-src data: https: covers base64 logo + remote photo_url values.
 function buildCsp(nonce: string): string {
   return [
@@ -27,6 +28,7 @@ function buildCsp(nonce: string): string {
     "style-src 'self' 'unsafe-inline'",
     `script-src 'self' 'nonce-${nonce}'`,
     "connect-src 'self' https://*.supabase.co",
+    "media-src 'self' https:",
     "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
     "upgrade-insecure-requests",
   ].join("; ");

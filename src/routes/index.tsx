@@ -124,6 +124,18 @@ function Index() {
 
 <section id="hero">
   <div className="hero-bg"></div>
+  {img("hero_video") && (
+    <video
+      className="hero-video"
+      src={img("hero_video")}
+      poster={img("hero_bg")}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+    />
+  )}
   <div className="hero-glow"></div>
   <div className="hero-content">
     <p className="hero-tagline font-extrabold text-lg">Música <span>Norteña</span> &nbsp;·&nbsp; Waukegan, Illinois &nbsp;·&nbsp; Desde <span>2007</span></p>
