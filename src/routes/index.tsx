@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import "../styles/beto-moreno.css";
 import { supabase } from "../lib/supabase";
 import type { Show, Song, Video, Member, Contact } from "../lib/supabase";
@@ -41,6 +41,23 @@ function Index() {
 
   // Look up an overridable image URL by key (from the site_images table).
   const img = (key: string) => safeExternalUrl(images[key]);
+
+  // Contact form: open the visitor's email app pre-filled to the booking
+  // address (contact.email, falling back to the band's Gmail).
+  const handleContactSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const data = new FormData(e.currentTarget);
+    const val = (k: string) => String(data.get(k) ?? "").trim();
+    const to = contact?.email ?? "lafuerzadebetomoreno@gmail.com";
+    const subject = `Contratación \u2014 ${val("nombre") || "Nuevo mensaje"}`;
+    const body =
+      `Nombre: ${val("nombre")}\n` +
+      `Correo: ${val("correo")}\n` +
+      `Teléfono: ${val("telefono")}\n` +
+      `Tipo de evento: ${val("tipo")}\n\n` +
+      `Mensaje:\n${val("mensaje")}`;
+    window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
 
   // Apply background-image overrides via CSS variables. When a key is unset,
   // the CSS var() fallback (the original baked-in image) is used, so the
@@ -343,22 +360,22 @@ function Index() {
     <h2 className="section-title reveal">Contac<span className="accent">to</span></h2>
     <div className="divider reveal"></div>
     <div className="contact-grid">
-      <div className="contact-form reveal">
+      <form className="contact-form reveal" onSubmit={handleContactSubmit}>
         <div className="form-group">
           <label>Nombre completo</label>
-          <input type="text" placeholder="Tu nombre" />
+          <input type="text" name="nombre" placeholder="Tu nombre" required />
         </div>
         <div className="form-group">
           <label>Correo electrónico</label>
-          <input type="email" placeholder="tu@correo.com" />
+          <input type="email" name="correo" placeholder="tu@correo.com" required />
         </div>
         <div className="form-group">
           <label>Teléfono</label>
-          <input type="tel" placeholder="+1 (000) 000-0000" />
+          <input type="tel" name="telefono" placeholder="+1 (000) 000-0000" />
         </div>
         <div className="form-group">
           <label>Tipo de evento</label>
-          <select>
+          <select name="tipo">
             <option value="">Selecciona una opción</option>
             <option>Boda / Wedding</option>
             <option>Quinceañera</option>
@@ -370,12 +387,12 @@ function Index() {
         </div>
         <div className="form-group">
           <label>Mensaje</label>
-          <textarea rows={4} placeholder="Cuéntanos sobre tu evento — fecha, lugar, ciudad..."></textarea>
+          <textarea rows={4} name="mensaje" required placeholder="Cuéntanos sobre tu evento — fecha, lugar, ciudad..."></textarea>
         </div>
-        <button className="btn-fire" style={{alignSelf: "flex-start", border: "none", fontSize: "0.82rem", cursor: "pointer"}}>
+        <button type="submit" className="btn-fire" style={{alignSelf: "flex-start", border: "none", fontSize: "0.82rem", cursor: "pointer"}}>
           Enviar Mensaje →
         </button>
-      </div>
+      </form>
       <div className="contact-info reveal">
         <h3>Hablemos</h3>
         {contact?.location && (
