@@ -43,5 +43,6 @@ export type Contact = {
   facebook_url: string | null;
   instagram_url: string | null;
   youtube_url: string | null;
+  youtube_videos_url: string | null;
   tiktok_url: string | null;
 };

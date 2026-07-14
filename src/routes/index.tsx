@@ -215,7 +215,7 @@ function Index() {
       ))}
     </div>
     <div style={{textAlign: "center", marginTop: "2rem"}}>
-      <a href={safeExternalUrl(contact?.youtube_url) ?? "https://www.youtube.com/channel/UCiHk7SOwEbKIBXM2srPduvw"} target="_blank" rel="noopener noreferrer" className="btn-outline">Ver Más en YouTube →</a>
+      <a href={safeExternalUrl(contact?.youtube_videos_url) ?? "https://www.youtube.com/@lafuerzadebetomoreno9762"} target="_blank" rel="noopener noreferrer" className="btn-outline">Ver Más en YouTube →</a>
     </div>
   </div>
 </section>
