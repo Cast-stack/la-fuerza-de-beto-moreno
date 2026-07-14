@@ -29,6 +29,7 @@ function Index() {
   const [members, setMembers] = useState<Member[]>([]);
   const [contact, setContact] = useState<Contact | null>(null);
   const [images, setImages] = useState<Record<string, string>>({});
+  const [formStatus, setFormStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   useEffect(() => {
     supabase.from("shows").select("*").order("date", { ascending: true }).then(({ data }) => data && setShows(data));
@@ -44,19 +45,26 @@ function Index() {
 
   // Contact form: open the visitor's email app pre-filled to the booking
   // address (contact.email, falling back to the band's Gmail).
-  const handleContactSubmit = (e: FormEvent<HTMLFormElement>) => {
+  // Contact form: save the booking request to Supabase (bookings table).
+  const handleContactSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const data = new FormData(form);
     const val = (k: string) => String(data.get(k) ?? "").trim();
-    const to = contact?.email ?? "lafuerzadebetomoreno@gmail.com";
-    const subject = `Contratación \u2014 ${val("nombre") || "Nuevo mensaje"}`;
-    const body =
-      `Nombre: ${val("nombre")}\n` +
-      `Correo: ${val("correo")}\n` +
-      `Teléfono: ${val("telefono")}\n` +
-      `Tipo de evento: ${val("tipo")}\n\n` +
-      `Mensaje:\n${val("mensaje")}`;
-    window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setFormStatus("sending");
+    const { error } = await supabase.from("bookings").insert({
+      name: val("nombre"),
+      email: val("correo") || null,
+      phone: val("telefono") || null,
+      event_type: val("tipo") || null,
+      message: val("mensaje"),
+    });
+    if (error) {
+      setFormStatus("error");
+      return;
+    }
+    form.reset();
+    setFormStatus("sent");
   };
 
   // Apply background-image overrides via CSS variables. When a key is unset,
@@ -389,9 +397,20 @@ function Index() {
           <label>Mensaje</label>
           <textarea rows={4} name="mensaje" required placeholder="Cuéntanos sobre tu evento — fecha, lugar, ciudad..."></textarea>
         </div>
-        <button type="submit" className="btn-fire" style={{alignSelf: "flex-start", border: "none", fontSize: "0.82rem", cursor: "pointer"}}>
-          Enviar Mensaje →
+        <button type="submit" disabled={formStatus === "sending"} className="btn-fire" style={{alignSelf: "flex-start", border: "none", fontSize: "0.82rem", cursor: "pointer", opacity: formStatus === "sending" ? 0.6 : 1}}>
+          {formStatus === "sending" ? "Enviando…" : "Enviar Mensaje →"}
         </button>
+        {formStatus === "sent" && (
+          <p style={{ color: "var(--fire-bright)", fontSize: "0.85rem", marginTop: "0.75rem" }}>
+            ¡Gracias! Tu mensaje fue enviado. Te contactaremos pronto.
+          </p>
+        )}
+        {formStatus === "error" && (
+          <p style={{ color: "#ff6b6b", fontSize: "0.85rem", marginTop: "0.75rem" }}>
+            No se pudo enviar. Intenta de nuevo, o escríbenos a{" "}
+            {contact?.email ?? "lafuerzadebetomoreno@gmail.com"}.
+          </p>
+        )}
       </form>
       <div className="contact-info reveal">
         <h3>Hablemos</h3>
