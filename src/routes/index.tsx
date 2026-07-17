@@ -30,6 +30,7 @@ function Index() {
   const [contact, setContact] = useState<Contact | null>(null);
   const [images, setImages] = useState<Record<string, string>>({});
   const [formStatus, setFormStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [text, setText] = useState<Record<string, string>>({});
 
   useEffect(() => {
     supabase.from("shows").select("*").order("date", { ascending: true }).then(({ data }) => data && setShows(data));
@@ -38,10 +39,14 @@ function Index() {
     supabase.from("members").select("*").order("sort_order", { ascending: true }).then(({ data }) => data && setMembers(data));
     supabase.from("contact").select("*").limit(1).single().then(({ data }) => data && setContact(data));
     supabase.from("site_images").select("key,url").then(({ data }) => data && setImages(Object.fromEntries((data as { key: string; url: string }[]).map((r) => [r.key, r.url]))));
+    supabase.from("site_text").select("key,value").then(({ data }) => data && setText(Object.fromEntries((data as { key: string; value: string }[]).map((r) => [r.key, r.value]))));
   }, []);
 
   // Look up an overridable image URL by key (from the site_images table).
   const img = (key: string) => safeExternalUrl(images[key]);
+
+  // Editable text: DB value by key, or the hardcoded fallback.
+  const t = (key: string, fallback: string) => text[key] ?? fallback;
 
   // Contact form: open the visitor's email app pre-filled to the booking
   // address (contact.email, falling back to the band's Gmail).
@@ -163,10 +168,10 @@ function Index() {
   )}
   <div className="hero-glow"></div>
   <div className="hero-content">
-    <p className="hero-tagline font-extrabold text-lg">Música <span>Norteña</span> &nbsp;·&nbsp; Waukegan, Illinois &nbsp;·&nbsp; Desde <span>2007</span></p>
+    {text["hero_tagline"] ? (<p className="hero-tagline font-extrabold text-lg">{text["hero_tagline"]}</p>) : (<p className="hero-tagline font-extrabold text-lg">Música <span>Norteña</span> &nbsp;·&nbsp; Waukegan, Illinois &nbsp;·&nbsp; Desde <span>2007</span></p>)}
     <div className="hero-ctas font-bold bg-inherit mt-5 mx-[67px] text-slate-50 px-[56px] py-[43px]">
-      <a href="#musica" className="btn-fire">Escuchar Ahora</a>
-      <a href="#contacto" className="btn-outline">Contrataciones</a>
+      <a href="#musica" className="btn-fire">{t("hero_cta_listen", "Escuchar Ahora")}</a>
+      <a href="#contacto" className="btn-outline">{t("hero_cta_booking", "Contrataciones")}</a>
     </div>
   </div>
 </section>
@@ -240,7 +245,7 @@ function Index() {
       ))}
     </div>
     <div style={{textAlign: "center", marginTop: "2rem"}}>
-      <a href={safeExternalUrl(contact?.youtube_videos_url) ?? "https://www.youtube.com/@lafuerzadebetomoreno9762"} target="_blank" rel="noopener noreferrer" className="btn-outline">Ver Más en YouTube →</a>
+      <a href={safeExternalUrl(contact?.youtube_videos_url) ?? "https://www.youtube.com/@lafuerzadebetomoreno9762"} target="_blank" rel="noopener noreferrer" className="btn-outline">{t("videos_more", "Ver Más en YouTube →")}</a>
     </div>
   </div>
 </section>
@@ -257,7 +262,7 @@ function Index() {
         <h2 className="section-title">La <span className="accent">Banda</span></h2>
         <div className="divider"></div>
         <div className="bio-tribute">🕊️ En memoria de Beto Moreno — El fundador, el alma</div>
-        <p className="bio-text">
+        {text["bio"] ? text["bio"].split(/\n\n+/).map((para: string, i: number) => (<p key={i} className="bio-text">{para}</p>)) : (<><p className="bio-text">
           <strong>La Fuerza de Beto Moreno</strong> nació en <strong>Waukegan, Illinois</strong>, 
           en el año <strong>2007</strong> bajo la visión de <strong>Beto Moreno</strong>, un músico 
           apasionado cuyo amor por la <strong>música norteña</strong> fue el corazón de todo lo que construyó.
@@ -269,19 +274,19 @@ function Index() {
         <p className="bio-text">
           Con raíces profundas en la tradición norteña y un sonido que conecta con el corazón de nuestra 
           comunidad, <strong>La Fuerza</strong> sigue escribiendo su historia — para Beto, y para todos sus fans.
-        </p>
+        </p></>)}
         <div className="bio-origin">
           <div className="origin-item">
-            <div className="origin-value">2007</div>
-            <div className="origin-label">Fundada</div>
+            <div className="origin-value">{t("stat1_value", "2007")}</div>
+            <div className="origin-label">{t("stat1_label", "Fundada")}</div>
           </div>
           <div className="origin-item">
-            <div className="origin-value">Waukegan, IL</div>
-            <div className="origin-label">Origen</div>
+            <div className="origin-value">{t("stat2_value", "Waukegan, IL")}</div>
+            <div className="origin-label">{t("stat2_label", "Origen")}</div>
           </div>
           <div className="origin-item">
-            <div className="origin-value">Norteña</div>
-            <div className="origin-label">Género</div>
+            <div className="origin-value">{t("stat3_value", "Norteña")}</div>
+            <div className="origin-label">{t("stat3_label", "Género")}</div>
           </div>
         </div>
       </div>
@@ -321,10 +326,10 @@ function Index() {
     {shows.length === 0 ? (
       <div className="shows-empty reveal">
         <div className="shows-empty-icon">🎸</div>
-        <h3>Próximamente</h3>
-        <p>Nuevas fechas en camino — síguenos en redes sociales para no perderte nada.</p>
+        <h3>{t("shows_empty_title", "Próximamente")}</h3>
+        <p>{t("shows_empty_text", "Nuevas fechas en camino — síguenos en redes sociales para no perderte nada.")}</p>
         <div style={{marginTop: "1.5rem"}}>
-          <a href="#contacto" className="btn-fire">Contratar la Banda</a>
+          <a href="#contacto" className="btn-fire">{t("shows_empty_cta", "Contratar la Banda")}</a>
         </div>
       </div>
     ) : (
